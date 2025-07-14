@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeVault - 私人代码仓库</title>
+    <!-- 引入Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- 引入Highlight.js用于代码高亮 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/styles/github-dark.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/lib/highlight.min.js"></script>
+    <!-- 引入代码语言包 -->
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/lib/languages/javascript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/lib/languages/python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/lib/languages/java.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/lib/languages/html.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/lib/languages/css.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/lib/languages/sql.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/lib/languages/csharp.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/lib/languages/php.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/lib/languages/ruby.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/lib/languages/go.min.js"></script>
+    
+    <!-- 配置Tailwind自定义颜色 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#36BFFA',
+                        success: '#00B42A',
+                        warning: '#FF7D00',
+                        danger: '#F53F3F',
+                        dark: '#1D2129',
+                        light: '#F2F3F5',
+                        'code-bg': '#0D1117'
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'Consolas', 'Monaco', 'monospace']
+                    },
+                }
+            }
+        }
+    </script>
+    
+    <!-- 自定义工具类 -->
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+            .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+            .animate-fade-in {
+                animation: fadeIn 0.3s ease-in-out;
+            }
+            .animate-slide-up {
+                animation: slideUp 0.3s ease-out;
+            }
+            .animate-pulse-slow {
+                animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+            }
+            .text-shadow {
+                text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-inter text-dark min-h-screen flex flex-col">
+    <!-- 导航栏 -->
+    <nav class="bg-white shadow-sm sticky top-0 z-20 transition-all duration-300" id="mainNav">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <i class="fa fa-code-fork text-primary text-2xl mr-2"></i>
+                        <span class="text-primary font-bold text-xl">CodeVault</span>
+                    </div>
+                    <div class="hidden md:ml-10 md:flex md:space-x-8">
+                        <a href="#" class="border-primary text-primary inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            我的代码
+                        </a>
+                        <a href="#" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            收藏
+                        </a>
+                        <a href="#" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                            最近更新
+                        </a>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <button id="addCodeBtn" class="bg-primary hover:bg-primary/90 text-white font-medium py-2 px-4 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center gap-2">
+                        <i class="fa fa-plus"></i>
+                        <span>新建代码</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- 欢迎横幅 -->
+        <div class="bg-gradient-to-r from-primary to-secondary text-white rounded-xl shadow-lg p-6 mb-8 transform hover:shadow-xl transition-all duration-500">
+            <h1 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold mb-2 text-shadow">欢迎使用 CodeVault</h1>
+            <p class="text-white/90 max-w-2xl">您的私人代码片段管理器，安全存储、轻松检索、高效管理您的代码资产。</p>
+            <div class="mt-4 flex flex-wrap gap-3">
+                <span class="px-3 py-1 bg-white/20 rounded-full text-sm backdrop-blur-sm">
+                    <i class="fa fa-code mr-1"></i> <span id="totalCodeCount">0</span> 个代码片段
+                </span>
+                <span class="px-3 py-1 bg-white/20 rounded-full text-sm backdrop-blur-sm">
+                    <i class="fa fa-tags mr-1"></i> <span id="totalTagCount">0</span> 个标签
+                </span>
+                <span class="px-3 py-1 bg-white/20 rounded-full text-sm backdrop-blur-sm">
+                    <i class="fa fa-folder mr-1"></i> 10 种编程语言
+                </span>
+            </div>
+        </div>
+        
+        <!-- 搜索和过滤 -->
+        <div class="mb-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="relative w-full md:w-auto">
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        placeholder="搜索代码标题、标签或内容..." 
+                        class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-300"
+                    >
+                    <i class="fa fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                </div>
+                
+                <div class="flex flex-wrap gap-2">
+                    <select id="languageFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-300">
+                        <option value="">所有语言</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="python">Python</option>
+                        <option value="java">Java</option>
+                        <option value="html">HTML</option>
+                        <option value="css">CSS</option>
+                        <option value="sql">SQL</option>
+                        <option value="csharp">C#</option>
+                        <option value="php">PHP</option>
+                        <option value="ruby">Ruby</option>
+                        <option value="go">Go</option>
+                    </select>
+                    
+                    <select id="tagFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-300">
+                        <option value="">所有标签</option>
+                    </select>
+                    
+                    <button id="filterBtn" class="bg-white hover:bg-gray-50 text-dark font-medium py-2 px-4 rounded-lg border border-gray-300 transition-all duration-300 flex items-center gap-2">
+                        <i class="fa fa-filter"></i>
+                        <span>筛选</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 代码列表 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- 代码卡片将通过JavaScript动态生成 -->
+        </div>
+        
+        <!-- 空状态 -->
+        <div id="emptyState" class="hidden text-center py-16">
+            <div class="text-gray-300 text-6xl mb-4">
+                <i class="fa fa-code-fork"></i>
+            </div>
+            <h3 class="text-xl font-medium text-gray-700 mb-2">还没有代码片段</h3>
+            <p class="text-gray-500 mb-6">点击右上角的"新建代码"按钮开始创建你的第一个代码片段</p>
+            <button id="emptyAddBtn" class="bg-primary hover:bg-primary/90 text-white font-medium py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center gap-2 mx-auto">
+                <i class="fa fa-plus"></i>
+                <span>新建代码</span>
+            </button>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark text-white py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="text-center md:text-left mb-4 md:mb-0">
+                    <p class="text-sm text-gray-400">© 2025 CodeVault. 保留所有权利.</p>
+                </div>
+                <div class="flex gap-4">
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fa fa-github"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fa fa-twitter"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fa fa-linkedin"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 新建/编辑代码模态框 -->
+    <div id="codeModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col animate-slide-up">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+                <h3 id="modalTitle" class="text-xl font-bold text-gray-800">新建代码</h3>
+                <button id="closeModalBtn" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="flex-grow overflow-y-auto p-6">
+                <form id="codeForm">
+                    <input type="hidden" id="codeId" value="">
+                    
+                    <div class="mb-4">
+                        <label for="codeTitle" class="block text-sm font-medium text-gray-700 mb-1">标题</label>
+                        <input 
+                            type="text" 
+                            id="codeTitle" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-300"
+                            placeholder="给你的代码取个名字"
+                        >
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label for="codeLanguage" class="block text-sm font-medium text-gray-700 mb-1">语言</label>
+                            <select 
+                                id="codeLanguage" 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-300"
+                            >
+                                <option value="javascript">JavaScript</option>
+                                <option value="python">Python</option>
+                                <option value="java">Java</option>
+                                <option value="html">HTML</option>
+                                <option value="css">CSS</option>
+                                <option value="sql">SQL</option>
+                                <option value="csharp">C#</option>
+                                <option value="php">PHP</option>
+                                <option value="ruby">Ruby</option>
+                                <option value="go">Go</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="codeTags" class="block text-sm font-medium text-gray-700 mb-1">标签（用逗号分隔）</label>
+                            <input 
+                                type="text" 
+                                id="codeTags" 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-300"
+                                placeholder="例如: 前端,React,组件"
+                            >
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="codeDescription" class="block text-sm font-medium text-gray-700 mb-1">描述（可选）</label>
+                        <textarea 
+                            id="codeDescription" 
+                            rows="3" 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-300 resize-none"
+                            placeholder="简要描述这段代码的用途"
+                        ></textarea>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label for="codeContent" class="block text-sm font-medium text-gray-700 mb-1">代码内容</label>
+                        <div class="relative">
+                            <div class="absolute right-3 top-3 flex gap-2">
+                                <button type="button" id="copyCodeBtn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm transition-colors flex items-center gap-1">
+                                    <i class="fa fa-clipboard"></i>
+                                    <span>复制</span>
+                                </button>
+                                <button type="button" id="expandCodeBtn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm transition-colors flex items-center gap-1">
+                                    <i class="fa fa-expand"></i>
+                                    <span>全屏</span>
+                                </button>
+                            </div>
+                            <textarea 
+                                id="codeContent" 
+                                rows="15" 
+                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-300 font-mono text-sm"
+                                placeholder="在此粘贴你的代码..."
+                            ></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="p-6 border-t border-gray-100 flex justify-end gap-3">
+                <button id="cancelModalBtn" class="bg-white hover:bg-gray-50 text-dark font-medium py-2 px-6 rounded-lg border border-gray-300 transition-all duration-300">
+                    取消
+                </button>
+                <button id="saveCodeBtn" class="bg-primary hover:bg-primary/90 text-white font-medium py-2 px-6 rounded-lg transition-all duration-300 transform hover:scale-105">
+                    保存代码
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 查看代码模态框 -->
+    <div id="viewCodeModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col animate-slide-up">
+            <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <i id="viewCodeLanguageIcon" class="fa fa-file-code-o text-primary"></i>
+                    <h3 id="viewCodeTitle" class="text-xl font-bold text-gray-800">JavaScript 数组操作</h3>
+                </div>
+                <button id="closeViewModalBtn" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="flex-grow overflow-y-auto p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-500 mb-1">语言</h4>
+                        <span id="viewCodeLanguage" class="px-3 py-1 text-sm rounded-full bg-blue-100 text-blue-800">JavaScript</span>
+                    </div>
+                    
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-500 mb-1">标签</h4>
+                        <div id="viewCodeTags" class="flex flex-wrap gap-2">
+                            <!-- 标签将通过JavaScript动态生成 -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h4 class="text-sm font-medium text-gray-500 mb-1">描述</h4>
+                    <p id="viewCodeDescription" class="text-gray-700">一些常用的JavaScript数组操作函数，包括去重、扁平化和求和。</p>
+                </div>
+                
+                <div>
+                    <h4 class="text-sm font-medium text-gray-500 mb-1">代码内容</h4>
+                    <div class="relative">
+                        <div class="absolute right-3 top-3 flex gap-2">
+                            <button type="button" id="viewCopyCodeBtn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm transition-colors flex items-center gap-1">
+                                <i class="fa fa-clipboard"></i>
+                                <span>复制</span>
+                            </button>
+                            <button type="button" id="viewExpandCodeBtn" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded text-sm transition-colors flex items-center gap-1">
+                                <i class="fa fa-expand"></i>
+                                <span>全屏</span>
+                            </button>
+                        </div>
+                        <pre id="viewCodeContent" class="bg-code-bg rounded-lg p-4 font-mono text-sm overflow-auto max-h-[400px] scrollbar-hide"><code class="language-javascript">// 数组去重
+function uniqueArray(arr) {
+    return [...new Set(arr)];
+}
+
+// 数组扁平化
+function flattenArray(arr) {
+    return arr.flat(Infinity);
+}
+
+// 数组求和
+function sumArray(arr) {
+    return arr.reduce((acc, val) => acc + val, 0);
+}</code></pre>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-6 border-t border-gray-100 flex justify-end gap-3">
+                <button id="closeViewBtn" class="bg-white hover:bg-gray-50 text-dark font-medium py-2 px-6 rounded-lg border border-gray-300 transition-all duration-300">
+                    关闭
+                </button>
+                <button id="editViewCodeBtn" class="bg-warning hover:bg-warning/90 text-white font-medium py-2 px-6 rounded-lg transition-all duration-300 transform hover:scale-105">
+                    编辑代码
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 全屏代码查看模态框 -->
+    <div id="fullscreenCodeModal" class="fixed inset-0 bg-code-bg text-white z-50 hidden flex flex-col">
+        <div class="p-4 border-b border-gray-700 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <i id="fullscreenLanguageIcon" class="fa fa-file-code-o text-primary"></i>
+                <h3 id="fullscreenTitle" class="font-bold">JavaScript 数组操作</h3>
+            </div>
+            <div class="flex gap-2">
+                <button id="fullscreenCopyBtn" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm transition-colors flex items-center gap-1">
+                    <i class="fa fa-clipboard"></i>
+                    <span>复制</span>
+                </button>
+                <button id="closeFullscreenBtn" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm transition-colors flex items-center gap-1">
+                    <i class="fa fa-times"></i>
+                    <span>关闭</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="flex-grow overflow-auto p-4">
+            <pre id="fullscreenCodeContent" class="font-mono text-sm"><code class="language-javascript">// 数组去重
+function uniqueArray(arr) {
+    return [...new Set(arr)];
+}
+
+// 数组扁平化
+function flattenArray(arr) {
+    return arr.flat(Infinity);
+}
+
+// 数组求和
+function sumArray(arr) {
+    return arr.reduce((acc, val) => acc + val, 0);
+}</code></pre>
+        </div>
+    </div>
+
+    <!-- 通知组件 -->
+    <div id="notification" class="fixed top-4 right-4 bg-dark text-white px-4 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 flex items-center gap-2 z-50">
+        <i id="notificationIcon" class="fa fa-check-circle text-success"></i>
+        <span id="notificationText">操作成功</span>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // 语言图标映射
+        const languageIcons = {
+            'javascript': 'fa-file-code-o',
+            'python': 'fa-file-code-o',
+            'java': 'fa-file-code-o',
+            'html': 'fa-file-code-o',
+            'css': 'fa-file-code-o',
+            'sql': 'fa-database',
+            'csharp': 'fa-file-code-o',
+            'php': 'fa-file-code-o',
+            'ruby': 'fa-file-code-o',
+            'go': 'fa-file-code-o'
+        };
+        
+        // 语言颜色映射
+        const languageColors = {
+            'javascript': { bg: 'bg-yellow-100', text: 'text-yellow-800' },
+            'python': { bg: 'bg-green-100', text: 'text-green-800' },
+            'java': { bg: 'bg-red-100', text: 'text-red-800' },
+            'html': { bg: 'bg-orange-100', text: 'text-orange-800' },
+            'css': { bg: 'bg-blue-100', text: 'text-blue-800' },
+            'sql': { bg: 'bg-purple-100', text: 'text-purple-800' },
+            'csharp': { bg: 'bg-pink-100', text: 'text-pink-800' },
+            'php': { bg: 'bg-indigo-100', text: 'text-indigo-800' },
+            'ruby': { bg: 'bg-red-100', text: 'text-red-800' },
+            'go': { bg: 'bg-teal-100', text: 'text-teal-800' }
+        };
+        
+        // 从本地存储加载代码
+        function loadCodes() {
+            const codes = JSON.parse(localStorage.getItem('codeVault')) || [];
+            return codes.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+        }
+        
+        // 保存代码到本地存储
+        function saveCodes(codes) {
+            localStorage.setItem('codeVault', JSON.stringify(codes));
+            updateStats(codes);
+        }
+        
+        // 更新统计信息
+        function updateStats(codes) {
+            document.getElementById('totalCodeCount').textContent = codes.length;
+            
+            // 计算总标签数
+            const allTags = new Set();
+            codes.forEach(code => {
+                if (code.tags) {
+                    code.tags.split(',').forEach(tag => {
+                        const trimmedTag = tag.trim();
+                        if (trimmedTag) {
+                            allTags.add(trimmedTag);
+                        }
+                    });
+                }
+            });
+            document.getElementById('totalTagCount').textContent = allTags.size;
+        }
+        
+        // 渲染代码列表
+        function renderCodeList(codes) {
+            const codeListContainer = document.querySelector('.grid');
+            codeListContainer.innerHTML = '';
+            
+            // 检查是否有空状态
+            if (codes.length === 0) {
+                document.getElementById('emptyState').classList.remove('hidden');
+                return;
+            }
+            
+            document.getElementById('emptyState').classList.add('hidden');
+            
+            // 渲染代码卡片
+            codes.forEach(code => {
+                const codeCard = document.createElement('div');
+                codeCard.className = 'code-card bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 animate-fade-in';
+                
+                const languageColor = languageColors[code.language] || { bg: 'bg-gray-100', text: 'text-gray-800' };
+                const languageIcon = languageIcons[code.language] || 'fa-file-code-o';
+                
+                // 解析标签
+                const tags = code.tags ? code.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
+                
+                // 格式化日期
+                const updatedAt = new Date(code.updatedAt);
+                const formattedDate = updatedAt.toLocaleDateString('zh-CN', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                
+                codeCard.innerHTML = `
+                    <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+                        <div class="flex items-center gap-2">
+                            <i class="fa ${languageIcon} text-primary"></i>
+                            <h3 class="font-medium">${code.title}</h3>
+                        </div>
+                        <span class="px-2 py-1 text-xs rounded-full ${languageColor.bg} ${languageColor.text}">${code.language}</span>
+                    </div>
+                    <div class="p-4 max-h-40 overflow-hidden">
+                        <pre class="bg-code-bg rounded-lg p-3 text-xs font-mono overflow-auto scrollbar-hide"><code class="language-${code.language}">${escapeHTML(code.content.substring(0, 500))}${code.content.length > 500 ? '...' : ''}</code></pre>
+                    </div>
+                    <div class="p-4 bg-gray-50 flex flex-wrap gap-2">
+                        ${tags.map(tag => `<span class="px-2 py-1 text-xs rounded-full bg-gray-200 text-gray-800">${tag}</span>`).join('')}
+                    </div>
+                    <div class="p-4 flex justify-between items-center border-t border-gray-100">
+                        <span class="text-xs text-gray-500">${formattedDate}</span>
+                        <div class="flex gap-2">
+                            <button class="text-gray-400 hover:text-primary transition-colors code-view-btn" data-id="${code.id}">
+                                <i class="fa fa-eye"></i>
+                            </button>
+                            <button class="text-gray-400 hover:text-warning transition-colors code-edit-btn" data-id="${code.id}">
+                                <i class="fa fa-pencil"></i>
+                            </button>
+                            <button class="text-gray-400 hover:text-danger transition-colors code-delete-btn" data-id="${code.id}">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                codeListContainer.appendChild(codeCard);
+                
+                // 高亮代码
+                codeCard.querySelectorAll('pre code').forEach((block) => {
+                    hljs.highlightElement(block);
+                });
+            });
+            
+            // 添加事件监听
+            document.querySelectorAll('.code-view-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const codeId = btn.getAttribute('data-id');
+                    openViewCodeModal(codeId);
+                });
+            });
+            
+            document.querySelectorAll('.code-edit-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const codeId = btn.getAttribute('data-id');
+                    openEditCodeModal(codeId);
+                });
+            });
+            
+            document.querySelectorAll('.code-delete-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const codeId = btn.getAttribute('data-id');
+                    deleteCode(codeId);
+                });
+            });
+        }
+        
+        // 打开新建代码模态框
+        function openNewCodeModal() {
+            document.getElementById('modalTitle').textContent = '新建代码';
+            document.getElementById('codeId').value = '';
+            document.getElementById('codeTitle').value = '';
+            document.getElementById('codeLanguage').value = 'javascript';
+            document.getElementById('codeTags').value = '';
+            document.getElementById('codeDescription').value = '';
+            document.getElementById('codeContent').value = '';
+            
+            document.getElementById('codeModal').classList.remove('hidden');
+            document.getElementById('codeTitle').focus();
+        }
+        
+        // 打开编辑代码模态框
+        function openEditCodeModal(codeId) {
+            const codes = loadCodes();
+            const code = codes.find(c => c.id === codeId);
+            
+            if (!code) {
+                showNotification('错误: 找不到该代码', 'error');
+                return;
+            }
+            
+            document.getElementById('modalTitle').textContent = '编辑代码';
+            document.getElementById('codeId').value = code.id;
+            document.getElementById('codeTitle').value = code.title;
+            document.getElementById('codeLanguage').value = code.language;
+            document.getElementById('codeTags').value = code.tags || '';
+            document.getElementById('codeDescription').value = code.description || '';
+            document.getElementById('codeContent').value = code.content;
+            
+            document.getElementById('codeModal').classList.remove('hidden');
+            document.getElementById('codeTitle').focus();
+        }
+        
+        // 打开查看代码模态框
+        function openViewCodeModal(codeId) {
+            const codes = loadCodes();
+            const code = codes.find(c => c.id === codeId);
+            
+            if (!code) {
+                showNotification('错误: 找不到该代码', 'error');
+                return;
+            }
+            
+            const languageColor = languageColors[code.language] || { bg: 'bg-gray-100', text: 'text-gray-800' };
+            const languageIcon = languageIcons[code.language] || 'fa-file-code-o';
+            
+            document.getElementById('viewCodeTitle').textContent = code.title;
+            document.getElementById('viewCodeLanguageIcon').className = `fa ${languageIcon} text-primary`;
+            document.getElementById('viewCodeLanguage').className = `px-3 py-1 text-sm rounded-full ${languageColor.bg} ${languageColor.text}`;
+            document.getElementById('viewCodeLanguage').textContent = code.language;
+            
+            // 解析标签
+            const tags = code.tags ? code.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
+            const tagsContainer = document.getElementById('viewCodeTags');
+            tagsContainer.innerHTML = '';
+            
+            tags.forEach(tag => {
+                const tagElement = document.createElement('span');
+                tagElement.className = 'px-2 py-1 text-xs rounded-full bg-gray-200 text-gray-800';
+                tagElement.textContent = tag;
+                tagsContainer.appendChild(tagElement);
+            });
+            
+            document.getElementById('viewCodeDescription').textContent = code.description || '无描述';
+            
+            // 显示代码内容
+            const codeContentElement = document.getElementById('viewCodeContent');
+            codeContentElement.innerHTML = `<code class="language-${code.language}">${escapeHTML(code.content)}</code>`;
+            hljs.highlightElement(codeContentElement.querySelector('code'));
+            
+            // 保存当前代码ID供编辑按钮使用
+            document.getElementById('editViewCodeBtn').setAttribute('data-id', code.id);
+            
+            // 保存当前代码信息供全屏查看使用
+            document.getElementById('fullscreenTitle').textContent = code.title;
+            document.getElementById('fullscreenLanguageIcon').className = `fa ${languageIcon} text-primary`;
+            document.getElementById('fullscreenCodeContent').innerHTML = `<code class="language-${code.language}">${escapeHTML(code.content)}</code>`;
+            document.getElementById('closeFullscreenBtn').setAttribute('data-id', code.id);
+            document.getElementById('fullscreenCopyBtn').setAttribute('data-id', code.id);
+            
+            document.getElementById('viewCodeModal').classList.remove('hidden');
+        }
+        
+        // 打开全屏代码查看
+        function openFullscreenCode() {
+            const codeId = document.getElementById('closeFullscreenBtn').getAttribute('data-id');
+            const codes = loadCodes();
+            const code = codes.find(c => c.id === codeId);
+            
+            if (!code) {
+                showNotification('错误: 找不到该代码', 'error');
+                return;
+            }
+            
+            const languageIcon = languageIcons[code.language] || 'fa-file-code-o';
+            
+            document.getElementById('fullscreenTitle').textContent = code.title;
+            document.getElementById('fullscreenLanguageIcon').className = `fa ${languageIcon} text-primary`;
+            document.getElementById('fullscreenCodeContent').innerHTML = `<code class="language-${code.language}">${escapeHTML(code.content)}</code>`;
+            hljs.highlightElement(document.getElementById('fullscreenCodeContent').querySelector('code'));
+            
+            document.getElementById('fullscreenCodeModal').classList.remove('hidden');
+        }
+        
+        // 保存代码
+        function saveCode() {
+            const codeId = document.getElementById('codeId').value;
+            const title = document.getElementById('codeTitle').value.trim();
+            const language = document.getElementById('codeLanguage').value;
+            const tags = document.getElementById('codeTags').value;
+            const description = document.getElementById('codeDescription').value;
+            const content = document.getElementById('codeContent').value;
+            
+            // 验证
+            if (!title) {
+                showNotification('请输入代码标题', 'error');
+                return;
+            }
+            
+            if (!content) {
+                showNotification('请输入代码内容', 'error');
+                return;
+            }
+            
+            const codes = loadCodes();
+            const now = new Date();
+            
+            if (codeId) {
+                // 编辑现有代码
+                const index = codes.findIndex(c => c.id === codeId);
+                if (index !== -1) {
+                    codes[index] = {
+                        ...codes[index],
+                        title,
+                        language,
+                        tags,
+                        description,
+                        content,
+                        updatedAt: now.toISOString()
+                    };
+                    
+                    showNotification('代码更新成功', 'success');
+                }
+            } else {
+                // 创建新代码
+                const newCode = {
+                    id: generateId(),
+                    title,
+                    language,
+                    tags,
+                    description,
+                    content,
+                    createdAt: now.toISOString(),
+                    updatedAt: now.toISOString()
+                };
+                
+                codes.push(newCode);
+                showNotification('代码创建成功', 'success');
+            }
+            
+            saveCodes(codes);
+            renderCodeList(codes);
+            updateTagFilter(codes);
+            closeCodeModal();
+        }
+        
+        // 删除代码
+        function deleteCode(codeId) {
+            if (!confirm('确定要删除这段代码吗？此操作不可恢复。')) {
+                return;
+            }
+            
+            const codes = loadCodes();
+            const updatedCodes = codes.filter(c => c.id !== codeId);
+            
+            if (updatedCodes.length !== codes.length) {
+                saveCodes(updatedCodes);
+                renderCodeList(updatedCodes);
+                updateTagFilter(updatedCodes);
+                showNotification('代码已删除', 'success');
+            } else {
+                showNotification('错误: 找不到该代码', 'error');
+            }
+        }
+        
+        // 关闭代码模态框
+        function closeCodeModal() {
+            document.getElementById('codeModal').classList.add('hidden');
+        }
+        
+        // 关闭查看代码模态框
+        function closeViewCodeModal() {
+            document.getElementById('viewCodeModal').classList.add('hidden');
+        }
+        
+        // 关闭全屏代码查看
+        function closeFullscreenCodeModal() {
+            document.getElementById('fullscreenCodeModal').classList.add('hidden');
+        }
+        
+        // 显示通知
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const notificationText = document.getElementById('notificationText');
+            const notificationIcon = document.getElementById('notificationIcon');
+            
+            notificationText.textContent = message;
+            
+            // 设置图标和颜色
+            if (type === 'success') {
+                notificationIcon.className = 'fa fa-check-circle text-success';
+            } else if (type === 'error') {
+                notificationIcon.className = 'fa fa-exclamation-circle text-danger';
+            } else if (type === 'warning') {
+                notificationIcon.className = 'fa fa-exclamation-triangle text-warning';
+            } else if (type === 'info') {
+                notificationIcon.className = 'fa fa-info-circle text-secondary';
+            }
+            
+            // 显示通知
+            notification.classList.remove('translate-x-full');
+            
+            // 3秒后自动隐藏
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+            }, 3000);
+        }
+        
+        // 生成唯一ID
+        function generateId() {
+            return 'code-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+        }
+        
+        // HTML转义
+        function escapeHTML(str) {
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+        
+        // 更新标签筛选器
+        function updateTagFilter(codes) {
+            const tagFilter = document.getElementById('tagFilter');
+            const allTags = new Set();
